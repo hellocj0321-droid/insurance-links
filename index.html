@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보험 약관 공시실 빠른 접근</title>
+<style>
+  :root{
+    --navy:#0B2447; --blue:#1D4ED8; --bg:#F8FAFC; --line:#E2E8F0;
+    --ink:#1E293B; --sub:#64748B; --life:#0F766E; --nonlife:#9A3412;
+    --org:#6D28D9; --gold:#D97706; --warn:#B91C1C;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Malgun Gothic','맑은 고딕',system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
+  a{color:var(--blue);text-decoration:none}
+  header{background:var(--navy);color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:-.3px}
+  header .sub{margin-top:4px;font-size:12px;color:#A9C0E8}
+
+  /* 상단 고정 표준약관·법규 패널 */
+  .ref-panel{background:#fff;border-bottom:1px solid var(--line);
+    padding:12px 24px;position:sticky;top:0;z-index:30;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .ref-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
+  .ref-label{font-size:11px;font-weight:700;color:var(--navy);min-width:74px;
+    background:#EEF2FF;border:1px solid #C7D2FE;border-radius:5px;
+    padding:3px 8px;text-align:center}
+  .ref-label.law{background:#FEF3C7;border-color:#FDE68A;color:#92400E}
+  .pill{font-size:12px;background:#F1F5F9;border:1px solid var(--line);
+    border-radius:14px;padding:4px 11px;white-space:nowrap;transition:.12s}
+  .pill:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .pill .need{color:var(--warn);font-size:10px}
+  .ref-toggle{cursor:pointer;font-size:12px;color:var(--sub);user-select:none;float:right}
+
+  /* 컨트롤 */
+  .controls{padding:14px 24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  #search{flex:1;min-width:220px;padding:9px 13px;border:1px solid var(--line);
+    border-radius:8px;font-size:14px;outline:none}
+  #search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.12)}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .fbtn{padding:7px 13px;border:1px solid var(--line);background:#fff;border-radius:18px;
+    cursor:pointer;font-size:13px;color:var(--sub);transition:.12s}
+  .fbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .count{font-size:12px;color:var(--sub);margin-left:auto;white-space:nowrap}
+
+  /* 카드 그리드 */
+  .grid{padding:6px 24px 60px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:11px;
+    padding:14px 15px;display:flex;flex-direction:column;gap:9px;
+    transition:.12s;position:relative}
+  .card:hover{box-shadow:0 4px 16px rgba(11,36,71,.09);border-color:#C7D2FE}
+  .card.fav{border-color:var(--gold);background:#FFFEF8}
+  .card-top{display:flex;align-items:flex-start;gap:8px}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;
+    color:#fff;white-space:nowrap;margin-top:2px}
+  .b-life{background:var(--life)} .b-nonlife{background:var(--nonlife)}
+  .b-org{background:var(--org)}
+  .cname{font-size:15px;font-weight:700;flex:1;letter-spacing:-.2px}
+  .unv{font-size:9px;color:var(--warn);border:1px solid #FCA5A5;background:#FEF2F2;
+    padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle}
+  .star{cursor:pointer;font-size:18px;color:#CBD5E1;line-height:1;user-select:none}
+  .star.on{color:var(--gold)}
+  .actions{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{font-size:12px;padding:6px 10px;border-radius:7px;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--ink);transition:.12s}
+  .btn:hover{background:#F1F5F9}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  .btn.primary:hover{background:#1742b8}
+  .memo-toggle{font-size:11px;color:var(--sub);cursor:pointer;user-select:none}
+  .memo-toggle:hover{color:var(--blue)}
+  .memo{display:none}
+  .memo.open{display:block}
+  .memo textarea{width:100%;min-height:54px;border:1px solid var(--line);border-radius:7px;
+    padding:7px 9px;font-size:12px;font-family:inherit;resize:vertical;color:var(--sub)}
+  .memo textarea:focus{outline:none;border-color:var(--blue)}
+  .empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:50px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;
+    opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  footer{padding:14px 24px 30px;font-size:11px;color:var(--sub);text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>📑 보험 약관 공시실 빠른 접근</h1>
+  <div class="sub">생명보험사 · 손해보험사 · 주요 기관 공시실 직접 링크 + 법규 패널</div>
+</header>
+
+<!-- 상단 고정: 표준약관 · 법규 -->
+<div class="ref-panel">
+  <span class="ref-toggle" id="refToggle">패널 접기 ▲</span>
+  <div id="refBody">
+    <div class="ref-row" id="lawRow"><span class="ref-label law">법규</span></div>
+  </div>
+</div>
+
+<div class="controls">
+  <input id="search" type="text" placeholder="🔍 회사명 검색 (예: 삼성, 메리츠, 미래에셋)">
+  <div class="filters" id="filters"></div>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  로컬 저장(localStorage): 즐겨찾기·메모는 이 브라우저에만 저장됩니다. &nbsp;|&nbsp;
+  "미검증" 표시는 공시실 직접 URL이 동적 페이지라 자동 확인이 어려운 경우이며, 홈페이지/경로 메모로 접근하세요.
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 데이터 (2026-06-28 웹검증) ===== */
+const LAW = [
+  {name:"보험업법", url:"https://www.law.go.kr/법령/보험업법"},
+  {name:"보험업법 시행령", url:"https://www.law.go.kr/법령/보험업법시행령"},
+  {name:"보험업법 시행규칙", url:"https://www.law.go.kr/법령/보험업법시행규칙"},
+  {name:"보험업감독규정", url:"https://www.law.go.kr/행정규칙/보험업감독규정"},
+  {name:"감독업무시행세칙", url:"https://www.law.go.kr/행정규칙/보험업감독업무시행세칙"},
+  {name:"상법(보험편)", url:"https://www.law.go.kr/법령/상법"},
+  {name:"금융소비자보호법", url:"https://www.law.go.kr/법령/금융소비자보호에관한법률"},
+  {name:"생명보험 표준약관", url:"https://www.fss.or.kr/fss/bbs/B0000115/list.do?menuNo=200504", need:true},
+];
+
+const DATA = [
+  /* ===== 생명보험사 ===== */
+  {c:"life",n:"삼성생명",h:"https://www.samsunglife.com",g:"https://www.samsunglife.com/individual/products/disclosure/sales/PDO-PRPRI010110M",p:"상품·서비스 > 공시실 > 상품공시 > 보험상품목록",m:"판매중 목록. 판매중지는 별도 탭(PDO-PRPRI010210M)"},
+  {c:"life",n:"한화생명",h:"https://www.hanwhalife.com",g:"https://www.hanwhalife.com/main/disclosure/goods/disclosurenotice/DF_GDDN000_P10000.do?MENU_ID1=DF_GDGL000",p:"공시실 > 상품공시실 > 상품목록",m:"판매중/판매중지 구분 제공"},
+  {c:"life",n:"교보생명",h:"https://www.kyobo.com",g:"https://www.kyobo.com/dgt/web/product-official/all-product/search",p:"상품공시실 > 전체상품조회",m:"판매여부 필터 + 약관·요약서·사업방법서"},
+  {c:"life",n:"미래에셋생명",h:"https://life.miraeasset.com",g:"https://life.miraeasset.com/micro/disclosure/product/PC-HO-080301-000000.do",p:"공시실 > 상품공시 > 상품목록",m:"판매중/판매중지 필터. 허브: /micro/disclosure/index.do"},
+  {c:"life",n:"신한라이프",h:"https://www.shinhanlife.co.kr",g:"https://www.shinhanlife.co.kr/hp/cdhi0020t01.do",p:"공시실 > 상품공시 > 보험상품공시 > 전체상품",m:"전체상품에서 판매중/판매중지 구분"},
+  {c:"life",n:"NH농협생명",h:"https://www.nhlife.co.kr",g:"https://www.nhlife.co.kr/ho/on/HOON0004M00.nhl",p:"공시실 > 상품공시 > 전체상품공시",m:"단일 페이지 판매여부 드롭다운 필터"},
+  {c:"life",n:"동양생명",h:"https://www.myangel.co.kr",g:"https://pbano.myangel.co.kr/paging/WE_AC_WEPAAP020100L",p:"공시실 > 상품공시실 > 판매상품",m:"공시 전용 서브도메인(pbano). 판매중지 별도 메뉴"},
+  {c:"life",n:"KB라이프생명",h:"https://www.kblife.co.kr",g:"https://www.kblife.co.kr/customer-common/productList.do",p:"공시실 > 상품공시실 > 상품목록",m:"판매중지는 (구)KB생명·푸르덴셜·한일 이력 구분"},
+  {c:"life",n:"흥국생명",h:"https://www.heungkuklife.co.kr",g:"https://www.heungkuklife.co.kr/front/public/saleProduct.do?searchFlgSale=Y",p:"공시실 > 상품공시 > 판매상품",m:"판매중/판매중지 메뉴 분리. 흥국화재와 구분"},
+  {c:"life",n:"DB생명",h:"https://www.idblife.com",g:"https://www.idblife.com/notice/product/sale",p:"공시실 > 상품공시실 > 판매상품공시",m:"판매중지: /notice/product/sold_out, 변액 /vrlf"},
+  {c:"life",n:"메트라이프생명",h:"https://www.metlife.co.kr",g:"https://brand.metlife.co.kr/pn/paReal/insuProductDisclMain.do",p:"공시실 > 보험상품공시 > 판매상품목록",m:"공시 허브 brand.metlife.co.kr 도메인"},
+  {c:"life",n:"푸본현대생명",h:"https://www.fubonhyundai.com",g:"https://www.fubonhyundai.com/?lockDevice=PC&menuId=CUSI150000000000#CUSI150102010101",p:"공시실 > 상품공시 > 판매상품",m:"대만 푸본그룹 계열"},
+  {c:"life",n:"ABL생명",h:"https://www.abllife.co.kr",g:"https://www.abllife.co.kr/st/pban/prdtPban/utilzGudn?page=index",p:"공시실 > 상품공시실 > 전체상품",m:"이용안내 진입점. 하위 상품목록은 JS 렌더"},
+  {c:"life",n:"처브라이프생명",h:"https://www.chubblife.co.kr",g:"https://www.chubblife.co.kr/front/official/sale/listSale.do",p:"공시실 > 상품공시 > 판매상품",m:"정적 URL. 라이나생명과 별개 법인"},
+  {c:"life",n:"iM라이프생명",h:"https://www.imlifeins.co.kr",g:"https://www.imlifeins.co.kr/BA/BA_B010.do",p:"공시실 > 상품공시실 > 상품분류",m:"구 DGB생명(2024.6 사명변경). KDB생명과 별개 회사"},
+  {c:"life",n:"KDB생명",h:"https://www.kdblife.co.kr",g:"https://www.kdblife.co.kr/ajax.do?scrId=HDLMA002M02P",p:"공시실 > 상품공시실 > 판매상품",m:"구 금호생명. iM라이프와 별개. 매각 진행 중"},
+  {c:"life",n:"AIA생명",h:"https://www.aia.co.kr",g:"https://mypage.aia.co.kr/AIAHomepage/disclosure/our-products/selling/individual.do",p:"공시실 > 상품공시실 > 개인 판매상품",m:"공시 도메인 mypage.aia.co.kr. 판매중지 .../stop-selling/individual.do"},
+  {c:"life",n:"라이나생명",h:"https://www.lina.co.kr",g:"https://www.lina.co.kr/disclosure/product-public-announcement/product-on-sales?key=0",p:"공시실 > 상품공시실 > 판매중인상품",m:"처브라이프와 별도 법인"},
+  {c:"life",n:"교보라이프플래닛",h:"https://www.lifeplanet.co.kr",g:"https://www.lifeplanet.co.kr/disclosure/good/HPDA01S0.dev",p:"공시실 > 상품공시 안내",m:"교보생명과 별개 온라인 전업 생보사"},
+  {c:"life",n:"하나생명",h:"https://www.hanalife.co.kr",g:"https://www.hanalife.co.kr/anm/product/productIntro.do",p:"상품공시실 > 전체상품 목록",m:"하나손해보험과 혼동 주의"},
+  {c:"life",n:"BNP파리바카디프생명",h:"https://www.cardif.co.kr",g:"https://www.cardif.co.kr/disclosure/papag101.do",p:"공시실 > 상품공시실 > 판매상품",m:"카테고리 선택 후 동적 로드"},
+  {c:"life",n:"IBK연금보험",h:"https://www.ibki.co.kr",g:"https://www.ibki.co.kr/process/HP_PBANO_PDT_SP_INDV",p:"공시실 > 상품공시 > 개인연금 > 판매상품",m:"연금 전업사. 개인/변액/기업연금 구분"},
+
+  /* ===== 손해보험사 ===== */
+  {c:"nonlife",n:"삼성화재",h:"https://www.samsungfire.com",g:"https://www.samsungfire.com/vh/page/VH.REIF0012.do",p:"공시실 > 상품공시 > 보험상품공시",m:"자동차/장기/일반/퇴직연금 → 상품 → 판매기간 3단계"},
+  {c:"nonlife",n:"현대해상",h:"https://www.hi.co.kr",g:"https://www.hi.co.kr/serviceAction.do?menuId=100931",p:"회사소개 > 공시실 > 상품공시 > 보험상품공시",m:"자동차/보장성·저축성/퇴직연금/펀드 구분"},
+  {c:"nonlife",n:"DB손해보험",h:"https://www.idbins.com",g:"https://www.idbins.com/FWMAIV1534.do",p:"공시실 > 상품공시 > 상품목록 및 기초서류",m:"장기는 채널(대면/TM·CM/방카)별 세분류"},
+  {c:"nonlife",n:"KB손해보험",h:"https://www.kbinsure.co.kr",g:"https://www.kbinsure.co.kr/CG802030001.ec",p:"공시실 > 상품공시 > 상품목록(약관)",m:"약관 직접 다운로드: /CG802030003.ec"},
+  {c:"nonlife",n:"메리츠화재",h:"https://www.meritzfire.com",g:"https://www.meritzfire.com/disclosure/product-announcement/product-list.do",p:"공시실 > 상품공시 > 상품목록 > 종목 선택",m:"직업·위험등급 분류표(rate-job.do) 별도 제공"},
+  {c:"nonlife",n:"한화손해보험",h:"https://www.hwgeneralins.com",g:"https://www.hwgeneralins.com/notice/ir/product-main.do",p:"공시실 > 상품공시실 > 자동차/장기/일반",m:"본사 공시실이 1차 권위소스(다이렉트·캐롯 분리)"},
+  {c:"nonlife",n:"롯데손해보험",h:"https://www.lotteins.co.kr",g:"https://www.lotteins.co.kr/web/C/D/H/cdh190.jsp",p:"공시실 > 상품공시 > 보험상품약관",m:"자동차는 cdh310 분리. 약관·요약서·사업방법서"},
+  {c:"nonlife",n:"흥국화재",h:"https://www.heungkukfire.co.kr",g:"https://www.heungkukfire.co.kr/FRW/announce/insGoodsGongsiSale.do",p:"공시 > 상품공시 > 보험상품공시",m:"장기/일반/자동차 3분류. 흥국생명과 혼동 주의"},
+  {c:"nonlife",n:"NH농협손해보험",h:"https://www.nhfire.co.kr",g:"https://www.nhfire.co.kr/announce/productAnnounce/retrieveInsuranceProductsAnnounce.nhfire",p:"공시실 > 보험상품공시 > 판매상품",m:"자동차보험 비취급 — 자동차 약관 없음 유의"},
+  {c:"nonlife",n:"하나손해보험",h:"https://www.hanainsure.co.kr",g:"https://www.hanainsure.co.kr/w/disclosure/product/saleProduct",p:"공시실 > 상품공시 (자동차/일반/장기 필터)",m:"구 더케이손보(2020.6 하나금융 인수)"},
+  {c:"nonlife",n:"AXA손해보험",h:"https://www.axa.co.kr",g:"https://www.axa.co.kr/AsianPlatformInternet/html/axacms/common/intro/disclosure/insurance/index.html",p:"공시실 > 보험상품공시",m:"다이렉트 중심. 자동차/일반/장기"},
+  {c:"nonlife",n:"카카오페이손해보험",h:"https://kakaopayinscorp.co.kr",g:"https://kakaopayinscorp.co.kr/disclosure/goods",p:"상품공시(disclosure/goods)",m:"디지털 손보. 휴대폰·여행자 등 소액"},
+  {c:"nonlife",n:"신한EZ손해보험",h:"https://www.shinhanez.co.kr",g:"https://www.shinhanez.co.kr/static/pub/PUB30000M01.html",p:"공시실 > 상품공시/가격공시",m:"구 BNP파리바카디프손보(2022 신한 편입)"},
+  {c:"nonlife",n:"AIG손해보험",h:"https://www.aig.co.kr",g:"https://www.aig.co.kr/wo/dpwot001.html?menuId=MS702",p:"상품공시실 > 상품목록(판매중)",m:"판매중지: /wo/dpwot002.html. 일반/장기"},
+  {c:"nonlife",n:"라이나손해보험(Chubb)",h:"https://www.acedirect.co.kr",g:"https://ec.aceinsurance.co.kr/jsp/acelimited/notice/productNoticeV2.jsp?status=Y",p:"공시실/상품공시 > 판매 중 상품",m:"구 에이스/Chubb 한국지점(2024.6 브랜드 변경). 라이나생명과 별개"},
+  {c:"nonlife",n:"SGI서울보증",h:"https://www.sgic.co.kr",g:"https://www.sgic.co.kr/chp/iutf/hp/insurance/CHPSGIC203VM1.mvc",p:"회사소개 > 공시실 > 상품공시",m:"보증보험 전업사(이행·신용보험). 일반 손보와 성격 상이"},
+
+  /* ===== 주요 기관 ===== */
+  {c:"org",n:"생명보험협회(KLIA)",h:"https://www.klia.or.kr/",g:"https://www.klia.or.kr/",p:"생보 정책·공시 메인",m:"상품비교공시는 소비자포털 경유"},
+  {c:"org",n:"생보 상품·광고심의 공시",h:"https://www.klia.or.kr/",g:"https://www.klia.or.kr/member/insurProduct/advio/list.do",p:"생보 상품 광고심의·공시 실무",m:"광고심의 위반내역 포함"},
+  {c:"org",n:"손해보험협회(KNIA)",h:"https://www.knia.or.kr/main",g:"https://www.knia.or.kr/main",p:"손보 정책 메인",m:""},
+  {c:"org",n:"손보협회 공시실(kpub)",h:"https://kpub.knia.or.kr/main.do",g:"https://kpub.knia.or.kr/main.do",p:"손보 공시실(상품비교·경영공시)",m:""},
+  {c:"org",n:"손보협회 소비자포털",h:"https://consumer.knia.or.kr/",g:"https://consumer.knia.or.kr/",p:"회사별 공시정보·상품비교",m:"전 손보사 약관 한 곳 교차검증 권위소스"},
+  {c:"org",n:"금융감독원(FSS)",h:"https://www.fss.or.kr/",g:"https://www.fss.or.kr/",p:"보험 감독·표준약관 게시·분쟁조정",m:""},
+  {c:"org",n:"금융위원회(FSC)",h:"https://www.fsc.go.kr/index",g:"https://www.fsc.go.kr/index",p:"금융정책·표준약관 개정 보도자료",m:""},
+  {c:"org",n:"금융상품한눈에",h:"https://finlife.fss.or.kr/finlife/main/main.do",g:"https://finlife.fss.or.kr/finlife/main/main.do",p:"예적금·대출·연금·보험 통합비교공시",m:""},
+  {c:"org",n:"파인(FINE)",h:"https://fine.fss.or.kr/fine/main/main.do",g:"https://fine.fss.or.kr/fine/main/main.do",p:"금융소비자 정보포털",m:"표준약관 조회·신용정보 통합"},
+  {c:"org",n:"보험개발원(KIDI)",h:"https://www.kidi.or.kr/",g:"https://www.kidi.or.kr/",p:"통계·요율·참조순보험요율·리포트",m:""},
+  {c:"org",n:"보험개발원 CAIS",h:"https://cais.kidi.or.kr/",g:"https://cais.kidi.or.kr/",p:"보험계약·사고이력 정보 시스템",m:""},
+  {c:"org",n:"보험연구원(KIRI)",h:"https://www.kiri.or.kr/index.do",g:"https://www.kiri.or.kr/index.do",p:"보험 정책·산업 연구보고서",m:""},
+  {c:"org",n:"한국신용정보원",h:"https://www.kcredit.or.kr:1441/",g:"https://www.kcredit.or.kr:1441/",p:"종합신용정보집중기관",m:"정식 URL에 포트 1441 포함"},
+  {c:"org",n:"보험다모아",h:"https://e-insmarket.or.kr/",g:"https://e-insmarket.or.kr/",p:"온라인 보험슈퍼마켓",m:"생·손보협회 공동운영 비교"},
+  {c:"org",n:"한국보험계리사회",h:"https://www.actuary.or.kr/",g:"https://www.actuary.or.kr/",p:"보험계리 실무·기준 자료",m:""},
+  {c:"org",n:"국가법령정보센터",h:"https://www.law.go.kr/",g:"https://www.law.go.kr/",p:"법령·행정규칙 원문 권위 출처",m:""},
+];
+
+/* ===== 상태 ===== */
+const LS_FAV="ins_fav_v1", LS_MEMO="ins_memo_v1";
+let favs = JSON.parse(localStorage.getItem(LS_FAV)||"[]");
+let memos = JSON.parse(localStorage.getItem(LS_MEMO)||"{}");
+let filter="all", q="";
+
+const FILTERS=[["all","전체"],["fav","⭐ 즐겨찾기"],["life","생명보험"],["nonlife","손해보험"],["org","기관"]];
+const BADGE={life:["b-life","생보"],nonlife:["b-nonlife","손보"],org:["b-org","기관"]};
+
+/* ===== 렌더: 표준약관·법규 패널 ===== */
+function renderPills(arr,row){
+  arr.forEach(x=>{
+    const a=document.createElement("a");
+    a.className="pill"; a.href=x.url; a.target="_blank"; a.rel="noopener";
+    a.innerHTML = x.name + (x.need?' <span class="need">검색필요</span>':'');
+    row.appendChild(a);
+  });
+}
+renderPills(LAW, document.getElementById("lawRow"));
+
+document.getElementById("refToggle").onclick=function(){
+  const b=document.getElementById("refBody");
+  const hidden=b.style.display==="none";
+  b.style.display=hidden?"":"none";
+  this.textContent=hidden?"패널 접기 ▲":"표준약관·법규 패널 펼치기 ▼";
+};
+
+/* ===== 렌더: 필터 버튼 ===== */
+const fc=document.getElementById("filters");
+FILTERS.forEach(([k,label])=>{
+  const b=document.createElement("button");
+  b.className="fbtn"+(k==="all"?" on":""); b.textContent=label; b.dataset.k=k;
+  b.onclick=()=>{filter=k; [...fc.children].forEach(c=>c.classList.toggle("on",c.dataset.k===k)); render();};
+  fc.appendChild(b);
+});
+
+/* ===== 렌더: 카드 그리드 ===== */
+const grid=document.getElementById("grid"), countEl=document.getElementById("count");
+function render(){
+  let list=DATA.filter(d=>{
+    if(filter==="fav") { if(!favs.includes(d.n)) return false; }
+    else if(filter!=="all" && d.c!==filter) return false;
+    if(q && !(d.n.toLowerCase().includes(q) || (d.m||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+  // 즐겨찾기 우선 정렬
+  list.sort((a,b)=>(favs.includes(b.n)?1:0)-(favs.includes(a.n)?1:0));
+  grid.innerHTML="";
+  if(!list.length){grid.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';countEl.textContent="0건";return;}
+  countEl.textContent=list.length+"건";
+  list.forEach(d=>grid.appendChild(card(d)));
+}
+
+function card(d){
+  const isFav=favs.includes(d.n);
+  const isOrg=d.c==="org";              // 유관기관: 공시실 별도 없음 → 홈·복사만
+  const [bcls,btxt]=BADGE[d.c];
+  const copyUrl=isOrg?d.h:d.g;
+  const memoVal = memos[d.n]!==undefined ? memos[d.n] : (d.p + (d.m?(" | "+d.m):""));
+  const el=document.createElement("div");
+  el.className="card"+(isFav?" fav":"");
+  el.innerHTML=`
+    <div class="card-top">
+      <span class="badge ${bcls}">${btxt}</span>
+      <span class="cname">${d.n}${d.u?'<span class="unv">미검증</span>':''}</span>
+      <span class="star ${isFav?'on':''}" title="즐겨찾기">${isFav?'★':'☆'}</span>
+    </div>
+    <div class="actions">
+      ${isOrg?'':`<a class="btn primary" href="${d.g}" target="_blank" rel="noopener">📂 공시실 열기</a>`}
+      <a class="btn ${isOrg?'primary':''}" href="${d.h}" target="_blank" rel="noopener">🏠 홈</a>
+      <button class="btn copy">📋 복사</button>
+      <span class="memo-toggle">📝 경로·메모</span>
+    </div>
+    <div class="memo">
+      <textarea spellcheck="false">${memoVal.replace(/</g,"&lt;")}</textarea>
+    </div>`;
+  el.querySelector(".star").onclick=()=>{
+    if(isFav) favs=favs.filter(x=>x!==d.n); else favs.push(d.n);
+    localStorage.setItem(LS_FAV,JSON.stringify(favs)); render();
+  };
+  el.querySelector(".copy").onclick=()=>{
+    navigator.clipboard.writeText(copyUrl).then(()=>toast((isOrg?"홈 URL 복사됨: ":"공시실 URL 복사됨: ")+d.n));
+  };
+  const mt=el.querySelector(".memo-toggle"), mb=el.querySelector(".memo");
+  mt.onclick=()=>mb.classList.toggle("open");
+  const ta=el.querySelector("textarea");
+  ta.onclick=e=>e.stopPropagation();
+  ta.oninput=()=>{ memos[d.n]=ta.value; localStorage.setItem(LS_MEMO,JSON.stringify(memos)); };
+  return el;
+}
+
+/* ===== 검색 ===== */
+document.getElementById("search").oninput=e=>{q=e.target.value.trim().toLowerCase();render();};
+
+/* ===== 토스트 ===== */
+let tT;
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(tT); tT=setTimeout(()=>t.classList.remove("show"),1600);
+}
+
+render();
+</script>
+</body>
+</html>
